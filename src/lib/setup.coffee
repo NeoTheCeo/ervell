@@ -94,22 +94,26 @@ sharify.data = {
 
 CurrentUser = require '../models/current_user'
 
-airbrake = new AirbrakeClient({
-  projectId: AIRBRAKE_PROJECT_ID,
-  projectKey: AIRBRAKE_API_KEY,
-})
+# Only initialize Airbrake if credentials are provided
+airbrake = null
+if AIRBRAKE_PROJECT_ID and AIRBRAKE_API_KEY
+  airbrake = new AirbrakeClient({
+    projectId: AIRBRAKE_PROJECT_ID,
+    projectKey: AIRBRAKE_API_KEY,
+  })
 
-airbrake.addFilter (notice) ->
-  return null if (
-    # Ignores 404s
-    (notice.errors[0].message is 'Not found') or
-    # Ignores 401s
-    (notice.errors[0].message is 'Access denied') or
-    # Ignores 400s
-    (notice.errors[0].message is 'Bad request')
-  )
-
-  notice
+# Only add filters if Airbrake is initialized
+if airbrake
+  airbrake.addFilter (notice) ->
+    return null if (
+      # Ignores 404s
+      (notice.errors[0].message is 'Not found') or
+      # Ignores 401s
+      (notice.errors[0].message is 'Access denied') or
+      # Ignores 400s
+      (notice.errors[0].message is 'Bad request')
+    )
+    notice
 
 module.exports = (app) ->
   console.log "Setting up... NODE_ENV=#{NODE_ENV}"
@@ -198,7 +202,8 @@ module.exports = (app) ->
 
   # Convert the GraphQL error messages into some kind of matching status code
   app.use require('./middleware/errorStatus.js').default
-  app.use(makeErrorHandler(airbrake))
+  if airbrake
+    app.use(makeErrorHandler(airbrake))
   app.use(require('../apps/errors').default)
 
   console.log 'Completed set up.'
