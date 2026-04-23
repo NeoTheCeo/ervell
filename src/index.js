@@ -25,8 +25,11 @@ if (process.env.NODE_ENV === 'development') {
     extensions: ['.ts', '.js', '.tsx', '.jsx'],
   })
 } else {
-  // Also need CoffeeScript in production
+  // Need CoffeeScript AND Babel for production (TypeScript files)
   require('coffee-register')
+  require('@babel/register')({
+    extensions: ['.ts', '.js', '.tsx', '.jsx'],
+  })
 }
 
 global.Promise = require('bluebird')
