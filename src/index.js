@@ -2,8 +2,10 @@
 
 require('source-map-support').install()
 require('regenerator-runtime/runtime')
-require('newrelic')
-require('sqreen')
+
+// NewRelic and Sqreen are optional in non-production environments
+try { require('newrelic') } catch (e) { /* NewRelic not configured */ }
+try { require('sqreen') } catch (e) { /* Sqreen not configured */ }
 
 /*
  * Apollo client uses Promise.prototype.finally,
@@ -22,6 +24,9 @@ if (process.env.NODE_ENV === 'development') {
   require('@babel/register')({
     extensions: ['.ts', '.js', '.tsx', '.jsx'],
   })
+} else {
+  // Also need CoffeeScript in production
+  require('coffee-register')
 }
 
 global.Promise = require('bluebird')
